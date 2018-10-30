@@ -1,0 +1,58 @@
+library(tidyverse)
+library(readxl)
+
+
+## MA PARCC DATA ##
+#grades 3-8 together
+parcc_ma_ela<-read_excel('./data/MA/PARCC/ELA.xls', skip = 7)
+parcc_ma_math<-read_excel('./data/MA/PARCC/MATH.xls', skip = 7)
+parcc_ma<-union(parcc_ma_ela, parcc_ma_math)
+
+ma<-list()
+
+ma$ela3<-parcc_ma_3ela<-read_excel('./data/MA/PARCC/3ELA.xls', skip = 7, na = 'N/A')
+ma$math3<-parcc_ma_3math<-read_excel('./data/MA/PARCC/3MATH.xls', skip = 7,na = 'N/A')
+ma$ela4<-parcc_ma_4ela<-read_excel('./data/MA/PARCC/4ELA.xls', skip = 7, na = 'N/A')
+ma$math4<-parcc_ma_4math<-read_excel('./data/MA/PARCC/4MATH.xls', skip = 7, na = 'N/A')
+ma$ela5<-parcc_ma_5ela<-read_excel('./data/MA/PARCC/5ELA.xls', skip = 7, na = 'N/A')
+ma$math5<-parcc_ma_5math<-read_excel('./data/MA/PARCC/5MATH.xls', skip = 7, na = 'N/A')
+ma$ela6<-parcc_ma_6ela<-read_excel('./data/MA/PARCC/6ELA.xls', skip = 7, na = 'N/A')
+ma$math6<-parcc_ma_6math<-read_excel('./data/MA/PARCC/6MATH.xls', skip = 7, na = 'N/A')
+ma$ela7<-parcc_ma_7ela<-read_excel('./data/MA/PARCC/7ELA.xls', skip = 7, na = 'N/A')
+ma$math7<-parcc_ma_7math<-read_excel('./data/MA/PARCC/7MATH.xls', skip = 7, na = 'N/A')
+ma$ela8<-parcc_ma_8ela<-read_excel('./data/MA/PARCC/8ELA.xls', skip = 7, na = 'N/A')
+ma$math8<-parcc_ma_8math<-read_excel('./data/MA/PARCC/8MATH.xls', skip = 7, na = 'N/A')
+ma$alg8<-parcc_ma_8alg<-read_excel('./data/MA/PARCC/8ALG.xls', skip = 7, na = 'N/A')
+
+ma<-map(ma, ~ filter(.,!is.na(`Grade/Subject`))%>%
+          separate(`Grade/Subject`, c('Grade', "Subject"), sep = 7)%>%
+  mutate(`SGP #` = as.numeric(`SGP #`),`Trans. SGP Median` = as.numeric(`Trans. SGP Median`)))
+
+
+ma_tib<-ma[[1]]
+for(i in 2:length(ma)){
+  ma_tib<-union(ma_tib, ma[[i]])
+}
+ma_tib<-arrange(ma_tib, `Org Name`, Grade)
+
+ma_math<-ma_tib%>%group_by(Grade)%>%filter(Subject == ' Math')%>%
+  summarise(avg_math = mean(`Average Scaled Score`))
+ma_ela<-ma_tib%>%group_by(Grade)%>%filter(Subject == ' ELA/L')%>%
+  summarise(avg_ela = mean(`Average Scaled Score`))
+ggplot(full_join(ma_math, ma_ela, by = 'Grade'), aes(x=avg_ela))+
+  geom_point(aes(y=avg_math, color = Grade))+
+  labs(title="                      MA avg. PARCC scores", x="ELA", y="MATH")
+
+ggplot(full_join(ma_math, ma_ela, by = 'Grade'))+
+  geom_point(aes(x=Grade, y=avg_math))+geom_point(aes(x=Grade, y=avg_ela), color='red')
+
+    ## DC PARCC DATA ##
+#grades 3-8 separate
+# not tidy-->schools by subroups and 'all' students
+parcc_dc<-read_excel('./DC/PARCC_det.xlsx', sheet = 4, na = 'n<25')
+
+
+  ## CO PARCC DATA ##
+#grades 3-8 separate
+parcc_co<-read_excel('./CO/PARCC.xlsx', skip = 4, na = '*')
+parcc_co_sch<-filter(parcc_co, Level == "SCHOOL")%>%select(-Level)
