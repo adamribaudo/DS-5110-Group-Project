@@ -1,0 +1,107 @@
+---
+title: "DC Prelim Data"
+author: "Adam R"
+date: "November 3, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(tidyverse)
+library(scales)
+
+scores <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+  filter(Grade == "ALL") %>% #Show all grades
+  select(-Grade) %>%
+  filter(`School Code` != "DCPS") %>%
+  mutate(`School Code` = as.numeric(`School Code`))
+schools <- read_csv("data/DC/dcps_school_scorecard_17_18_trimmed.csv") 
+enrollment <- read_csv("data/DC/enrollment-data-17-18.csv") %>% select(-Name)
+
+dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
+  left_join(enrollment, by=c("School Code" = "Code")) %>%
+  mutate(ela_tests = `# of English Language Arts (ELA) Test Takers`,
+         ela_proficient = `ELA # Proficient`,
+         math_tests = `# Math Test Takers`,
+         math_proficient = `Math - # Proficient`,
+         Uniform = as.factor(Uniform)) %>%
+  mutate(Safe_Truancy_Current_Year = as.numeric(sub("%", Safe_Truancy_Current_Year, replacement="")) / 100)
+    
+
+```
+
+# Notes
+## Notes from August 2018 PARCC Presentation
+
+- PARCC scores in DC up for 3rd year in a row across ELA and Math. 33.3% passing in ELA and 29.4% passing in Math.
+- 
+
+## Notes from http://dcpsbudget.ourdcschools.org/
+
+- While individual school budgets account for roughly 85% of total educational expenditures in the DCPS school system, they do not cover everything. Central office, textbooks, athletics, special education related services other than psychologists and social workers, utilities, security, food service, and maintenance all fall outside individual school budgets and so are not shown above.
+
+- The result is that per pupil allocations for general education vary widely from school to school with variable correlation to enrollment. 
+
+- The at-risk allocation is based on the number of students that are at-risk of academic failure based on one or more of the following: homeless, in the District's foster care system, receiving Temporary Assistance for Needy Families (TANF) or the Supplemental Nutrition Assistance Program (SNAP), or in high school only, are at least one year older than the expected age for their grade. According to DC law, at-risk funds are supposed to follow the student to his or her school.
+
+## Notes from https://dcps.dc.gov/node/966292
+
+- Total # of schools is 116
+
+# Summary Stats
+## Enrollment
+```{r}
+
+ggplot(dc) + geom_col(width=1,aes(x=reorder(as.factor(`School Code`),`Total Enrolled`), y=`Total Enrolled`)) + coord_flip() + xlab("School Code") + ylab("Total Enrolled Students") + labs(title="Students Enrolled by School (n=111)")
+
+```
+
+```{r}
+summary(dc$`Total Enrolled`)
+```
+
+## PARCC Results
+```{r}
+dc_math <- dc %>% gather(key=`Math Level`, value=`Math PARCC Outcomes`, `Math - # Level 1`, `Math - # Level 2`, `Math - # Level 3`, `Math - # Level 4`, `Math - # Level 4`, `Math - # Level 5`) %>% select(`Math Level`, `Math PARCC Outcomes`)
+
+ggplot(dc_math) + geom_col(aes(x=`Math Level`, y=`Math PARCC Outcomes`))
+```
+
+## PARCC Results by Ward
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dc %>% group_by(Dir_Ward) %>% summarise(`ELA Test Takers`=sum(`# of English Language Arts (ELA) Test Takers`, na.rm=T), 
+                                             `ELA Proficient`=sum(`ELA # Proficient`, na.rm=T)) %>%
+  mutate(`% ELA Proficient` = percent(`ELA Proficient` / `ELA Test Takers`)) %>%
+  arrange(`% ELA Proficient`)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dc %>% group_by(Dir_Ward) %>% summarise(`Math Test Takers`=sum(`# Math Test Takers`, na.rm=T), 
+                                             `Math Proficient`=sum(`Math - # Proficient`, na.rm=T)) %>%
+  mutate(`% Math Proficient` = percent(`Math Proficient` / `Math Test Takers`)) %>%
+  arrange(`% Math Proficient`)
+```
+
+# Math Test Results by School Uniform
+
+```{r}
+dc %>% count(Uniform)
+```
+
+```{r}
+  ggplot(dc) + geom_boxplot(aes(x = Uniform, y=  (math_proficient/math_tests)))
+
+```
+
+# Math Test Performance by Truancy Rate
+
+```{r}
+ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = (math_proficient/math_tests)))
+
+```
