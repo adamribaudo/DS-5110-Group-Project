@@ -9,19 +9,20 @@ parcc_ma<-union(parcc_ma_ela, parcc_ma_math)
 
 ma<-list()
 
-ma$ela3<-parcc_ma_3ela<-read_excel('./data/MA/PARCC/3ELA.xls', skip = 7, na = 'N/A')
-ma$math3<-parcc_ma_3math<-read_excel('./data/MA/PARCC/3MATH.xls', skip = 7,na = 'N/A')
-ma$ela4<-parcc_ma_4ela<-read_excel('./data/MA/PARCC/4ELA.xls', skip = 7, na = 'N/A')
-ma$math4<-parcc_ma_4math<-read_excel('./data/MA/PARCC/4MATH.xls', skip = 7, na = 'N/A')
-ma$ela5<-parcc_ma_5ela<-read_excel('./data/MA/PARCC/5ELA.xls', skip = 7, na = 'N/A')
-ma$math5<-parcc_ma_5math<-read_excel('./data/MA/PARCC/5MATH.xls', skip = 7, na = 'N/A')
-ma$ela6<-parcc_ma_6ela<-read_excel('./data/MA/PARCC/6ELA.xls', skip = 7, na = 'N/A')
-ma$math6<-parcc_ma_6math<-read_excel('./data/MA/PARCC/6MATH.xls', skip = 7, na = 'N/A')
-ma$ela7<-parcc_ma_7ela<-read_excel('./data/MA/PARCC/7ELA.xls', skip = 7, na = 'N/A')
-ma$math7<-parcc_ma_7math<-read_excel('./data/MA/PARCC/7MATH.xls', skip = 7, na = 'N/A')
-ma$ela8<-parcc_ma_8ela<-read_excel('./data/MA/PARCC/8ELA.xls', skip = 7, na = 'N/A')
-ma$math8<-parcc_ma_8math<-read_excel('./data/MA/PARCC/8MATH.xls', skip = 7, na = 'N/A')
-ma$alg8<-parcc_ma_8alg<-read_excel('./data/MA/PARCC/8ALG.xls', skip = 7, na = 'N/A')
+#use list.files() function in future
+ma$ela3<-read_excel('./data/MA/PARCC/3ELA.xls', skip = 7, na = 'N/A')
+ma$math3<-read_excel('./data/MA/PARCC/3MATH.xls', skip = 7,na = 'N/A')
+ma$ela4<-read_excel('./data/MA/PARCC/4ELA.xls', skip = 7, na = 'N/A')
+ma$math4<-read_excel('./data/MA/PARCC/4MATH.xls', skip = 7, na = 'N/A')
+ma$ela5<-read_excel('./data/MA/PARCC/5ELA.xls', skip = 7, na = 'N/A')
+ma$math5<-read_excel('./data/MA/PARCC/5MATH.xls', skip = 7, na = 'N/A')
+ma$ela6<-read_excel('./data/MA/PARCC/6ELA.xls', skip = 7, na = 'N/A')
+ma$math6<-read_excel('./data/MA/PARCC/6MATH.xls', skip = 7, na = 'N/A')
+ma$ela7<-read_excel('./data/MA/PARCC/7ELA.xls', skip = 7, na = 'N/A')
+ma$math7<-read_excel('./data/MA/PARCC/7MATH.xls', skip = 7, na = 'N/A')
+ma$ela8<-read_excel('./data/MA/PARCC/8ELA.xls', skip = 7, na = 'N/A')
+ma$math8<-read_excel('./data/MA/PARCC/8MATH.xls', skip = 7, na = 'N/A')
+ma$alg8<-read_excel('./data/MA/PARCC/8ALG.xls', skip = 7, na = 'N/A')
 
 ma<-map(ma, ~ filter(.,!is.na(`Grade/Subject`))%>%
           separate(`Grade/Subject`, c('Grade', "Subject"), sep = 7)%>%
