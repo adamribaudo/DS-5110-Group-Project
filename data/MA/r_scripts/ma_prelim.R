@@ -1,9 +1,9 @@
 
 ## MA PARCC DATA ##
 #grades 3-8 together
-parcc_ma_ela<-read_excel('./data/MA/PARCC/ELA.xls', skip = 7)
-parcc_ma_math<-read_excel('./data/MA/PARCC/MATH.xls', skip = 7)
-parcc_ma<-union(parcc_ma_ela, parcc_ma_math)
+#parcc_ma_ela<-read_excel('./data/MA/PARCC/ELA.xls', skip = 7)
+#parcc_ma_math<-read_excel('./data/MA/PARCC/MATH.xls', skip = 7)
+#parcc_ma<-union(parcc_ma_ela, parcc_ma_math)
 
 ma<-list()
 
