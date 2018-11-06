@@ -10,6 +10,8 @@ parcc_tib<-parcc_tib%>%mutate(sch_code = `Org Code`)%>%select(-`Org Code`)
 staff_ret<-read_excel("./data/MA/staffingretention.xlsx", skip = 1)%>%mutate(sch_code = `School Code`)%>%select(-`School Code`)
 
 parcc_staff<-left_join(parcc_tib, staff_ret, by = 'sch_code')
+  # have each grade, subject and grades 3-8 for each school
+
 
 ggplot(parcc_staff, aes(as.numeric(`Teacher % Retained`), `Average Scaled Score`))+
   geom_point(alpha = 1/10)+geom_smooth(color = 'red')+xlim(50,100)

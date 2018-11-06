@@ -54,5 +54,5 @@ parcc_dc<-read_excel('./DC/PARCC_det.xlsx', sheet = 4, na = 'n<25')
 
   ## CO PARCC DATA ##
 #grades 3-8 separate
-parcc_co<-read_excel('./CO/PARCC.xlsx', skip = 4, na = '*')
+parcc_co<-read_excel('./data/CO/PARCC.xlsx', skip = 4, na = '*')
 parcc_co_sch<-filter(parcc_co, Level == "SCHOOL")%>%select(-Level)
