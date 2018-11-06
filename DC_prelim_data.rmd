@@ -20,8 +20,15 @@ scores <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n <
   select(-Grade) %>%
   filter(`School Code` != "DCPS") %>%
   mutate(`School Code` = as.numeric(`School Code`))
+
 schools <- read_csv("data/DC/dcps_school_scorecard_17_18_trimmed.csv") 
+
 enrollment <- read_csv("data/DC/enrollment-data-17-18.csv") %>% select(-Name)
+
+budget <- read_csv("data/DC/dcpsbudget.ourdcschools.org-budget-data.csv") %>% 
+  filter(YEAR == 2018) %>% 
+  select(-WARD, SCHOOLNAME, -LAT,-LON,-YEAR ) %>%
+  mutate(`Per Student Spending`=AMT_ENROLLMENT/TOTALENROLLMENT)
 
 dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
   left_join(enrollment, by=c("School Code" = "Code")) %>%
@@ -30,8 +37,8 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
          math_tests = `# Math Test Takers`,
          math_proficient = `Math - # Proficient`,
          Uniform = as.factor(Uniform)) %>%
-  mutate(Safe_Truancy_Current_Year = as.numeric(sub("%", Safe_Truancy_Current_Year, replacement="")) / 100)
-    
+  mutate(Safe_Truancy_Current_Year = as.numeric(sub("%", Safe_Truancy_Current_Year, replacement="")) / 100) %>%
+  left_join(budget, by=c("School Code" = "SCHOOLCODE"))
 
 ```
 
@@ -39,7 +46,6 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
 ## Notes from August 2018 PARCC Presentation
 
 - PARCC scores in DC up for 3rd year in a row across ELA and Math. 33.3% passing in ELA and 29.4% passing in Math.
-- 
 
 ## Notes from http://dcpsbudget.ourdcschools.org/
 
@@ -51,7 +57,7 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
 
 ## Notes from https://dcps.dc.gov/node/966292
 
-- Total # of schools is 116
+- Total # of schools is 116 (but we only have 111 schools with PARCC results)
 
 # Summary Stats
 ## Enrollment
@@ -96,12 +102,32 @@ dc %>% count(Uniform)
 
 ```{r}
   ggplot(dc) + geom_boxplot(aes(x = Uniform, y=  (math_proficient/math_tests)))
-
 ```
 
 # Math Test Performance by Truancy Rate
 
 ```{r}
 ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = (math_proficient/math_tests)))
-
 ```
+
+# Test Perfomance by Per Student Spending
+## Per Student Spending by Ward
+```{r}
+ggplot(dc %>% select(`Per Student Spending`, Dir_Ward),aes(`Per Student Spending`, color = as.factor(Dir_Ward)), omit.na=T) + geom_freqpoly(binwidth=1000)
+```
+
+```{r}
+summary(dc$`Per Student Spending`)
+```
+
+## Math
+
+```{r}
+ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(math_proficient/math_tests)))
+```
+
+## ELA
+```{r}
+ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(ela_proficient/ela_tests)))
+```
+
