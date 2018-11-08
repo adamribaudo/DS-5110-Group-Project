@@ -14,6 +14,12 @@ knitr::opts_chunk$set(
 
 library(tidyverse)
 library(scales)
+library(modelr)
+
+scores_all_grades <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+  filter(Grade != "ALL") %>% 
+  filter(`School Code` != "DCPS") %>%
+  mutate(`School Code` = as.numeric(`School Code`))
 
 scores <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
   filter(Grade == "ALL") %>% #Show all grades
@@ -38,6 +44,23 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
          math_proficient = `Math - # Proficient`,
          Uniform = as.factor(Uniform)) %>%
   mutate(Safe_Truancy_Current_Year = as.numeric(sub("%", Safe_Truancy_Current_Year, replacement="")) / 100) %>%
+  mutate(Perf_Teachers_Prior_Year = as.numeric(sub("%", Perf_Teachers_Prior_Year, replacement="")) / 100) %>%
+  mutate(Perf_Teachers_Current_Year = as.numeric(sub("%", Perf_Teachers_Current_Year, replacement="")) / 100) %>%
+  mutate(math_proficiency = math_proficient / math_tests) %>%
+  mutate(Demo_Asian = as.numeric(sub("%", Demo_Asian, replacement="")) / 100) %>% 
+  mutate(Demo_Black = as.numeric(sub("%", Demo_Black, replacement="")) / 100) %>% 
+  mutate(Demo_Hispanic = as.numeric(sub("%", Demo_Hispanic, replacement="")) / 100) %>% 
+  mutate(`Demo_N.Amer` = as.numeric(sub("%", `Demo_N.Amer`, replacement="")) / 100) %>% 
+  mutate(Demo_White = as.numeric(sub("%", Demo_White, replacement="")) / 100) %>% 
+  mutate(Demo_Multi = as.numeric(sub("%", Demo_Multi, replacement="")) / 100) %>% 
+  mutate(Demo_NHawPI = as.numeric(sub("%", Demo_NHawPI, replacement="")) / 100) %>%
+  mutate(Demo_Asian_Total = Demo_Asian * Enroll_Total) %>% 
+  mutate(Demo_Black_Total = Demo_Black * Enroll_Total) %>% 
+  mutate(Demo_Hispanic_Total = Demo_Hispanic * Enroll_Total) %>% 
+  mutate(Demo_NAmer_Total = `Demo_N.Amer` * Enroll_Total) %>% 
+  mutate(Demo_White_Total = Demo_White * Enroll_Total) %>% 
+  mutate(Demo_Multi_Total = Demo_Multi * Enroll_Total) %>% 
+  mutate(Demo_NHawPI_Total = Demo_NHawPI * Enroll_Total) %>%
   left_join(budget, by=c("School Code" = "SCHOOLCODE"))
 
 ```
@@ -58,6 +81,9 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
 ## Notes from https://dcps.dc.gov/node/966292
 
 - Total # of schools is 116 (but we only have 111 schools with PARCC results)
+
+## Notes from Bellweather Teacher retention report
+https://bellwethereducation.org/publication/retaining-high-performers-insights-dc-public-schools-teacher-exit-survey
 
 # Summary Stats
 ## Enrollment
@@ -131,3 +157,56 @@ ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(math_proficient/math_te
 ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(ela_proficient/ela_tests)))
 ```
 
+#Teacher Retention
+
+## Current Year
+Would be interesting to look at this outlier schools that have low retention but high scores.
+```{r}
+#Perf_Teachers_Prior_Year
+ggplot(dc) + geom_point(aes(x=Perf_Teachers_Current_Year, y=(math_proficient/math_tests)))
+```
+## Prior Year
+
+```{r}
+#Perf_Teachers_Prior_Year
+
+ggplot(dc) + geom_point(aes(x=Perf_Teachers_Prior_Year, y=(math_proficient/math_tests)))
+
+```
+
+# Test Scores by Demo
+## Number of students by Demo
+```{r}
+dc_demo <- dc %>% select(select_vars(names(dc), ends_with("_Total")), math_proficiency, Enroll_Total) %>%
+  gather(key="Demo", value="Students", select_vars(names(dc_demo), starts_with("Demo")))
+
+ggplot(dc_demo) + geom_col(aes(x=reorder(Demo, Students), y=Students)) + coord_flip()
+```
+
+# Model Building
+Variables of interest:
+- Truancy
+- Teacher Retention
+- Demo
+
+```{r}
+
+fit <- lm(data=dc, math_proficiency ~ (Demo_Black))
+summary(fit)
+
+grid <- dc %>% data_grid(Demo_Black) %>% add_predictions(fit)
+
+ggplot(dc, aes(Demo_Black, math_proficiency)) + 
+  geom_point() + 
+  geom_line(data = grid, aes(y = pred))
+
+dc <- dc %>% add_residuals(fit)
+ggplot(dc) + geom_point(aes(x=Demo_Black,y=resid)) 
+# Is there a way to add a line based on intercept, coef alone?
+
+#When I add Hispanic, the prediction for Demo_White/Asian turns negative??
+#Compare below to fit <- lm(data=dc, math_proficiency ~ Demo_Black + Demo_Asian + Demo_White)
+fit <- lm(data=dc, math_proficiency ~ Demo_Black + Demo_Asian + Demo_White + Demo_Hispanic)
+summary(fit)
+
+```
