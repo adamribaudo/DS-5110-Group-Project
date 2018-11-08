@@ -127,10 +127,30 @@ dc %>% count(Uniform)
 ```
 
 ```{r}
-  ggplot(dc) + geom_boxplot(aes(x = Uniform, y=  (math_proficient/math_tests)))
+  ggplot(dc) + geom_boxplot(aes(x = Uniform, y=`School Code`  (math_proficient/math_tests)))
 ```
 
-# Math Test Performance by Truancy Rate
+# Exploring Truancy
+- Defined as unexcused absence from school
+- Absence days / Total potential days
+
+```{r}
+summary(dc$Safe_Truancy_Current_Year)
+```
+
+```{r}
+ggplot(dc) + geom_boxplot(aes(y=Safe_Truancy_Current_Year, x=as.factor(Dir_Ward)))
+```
+
+- TODO show median truancy by proficiency
+
+```{r}
+
+dc %>% group_by(Dir_Ward) %>% summarise(med_truancy = median(Safe_Truancy_Current_Year, na.rm=T), proficiency = proficient/total)
+
+```
+
+## Math Test Performance by Truancy Rate
 
 ```{r}
 ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = (math_proficient/math_tests)))
@@ -187,7 +207,13 @@ ggplot(dc_demo) + geom_col(aes(x=reorder(Demo, Students), y=Students)) + coord_f
 Variables of interest:
 - Truancy
 - Teacher Retention
-- Demo
+- Suspensions
+- Budget per student
+- Teacher Salary
+- Teacher / Student Ratio
+
+
+
 
 ```{r}
 
