@@ -1,0 +1,73 @@
+---
+title: "Preliminary Data Analysis"
+author: "Ayush Bhandari"
+date: "November 5, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+parcc<-read_excel("C:/Users/Ayush/Downloads/IDMP/DS-5110-Group-Project-master/data/CO/PARCC.xlsx")
+ELA_Performance <- filter(parcc,District_Name == 'All Districts',Content == 'ELA')
+
+ELA_Performance <- gather(ELA_Performance,"Expectations","Percentage",c(14,16,18,20,22))
+
+
+Math_Performance <- filter(parcc,District_Name == 'All Districts',Content == 'Math',Test!='Algebra I',
+                           Test!='Algebra II',Test!='Geometry',Test!='Integrated I',
+                           Test!='Integrated II',Test!='Integrated III')
+
+Math_Performance <- gather(Math_Performance,"Expectations","Percentage",c(14,16,18,20,22))
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r }
+ggplot(ELA_Performance,aes(x = Test,y = Percentage, fill = Expectations)) + 
+         geom_col(stat="identity", position = position_dodge(width = 1))
+
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+
+ggplot(Math_Performance,aes(x = Test,y = Percentage, fill = Expectations)) + 
+         geom_col(stat="identity", position = position_dodge(width = 1))
+```
+```{r}
+absentism<-read_excel("C:/Users/Ayush/Downloads/IDMP/DS-5110-Group-Project-master/data/CO/Chronic Absenteeism 2016-17 revised.xlsx")
+newdata <-left_join(filter(parcc,School_Name == 'All Schools',
+                           District_Name != 'All Districts',Content == 'ELA'),absentism,
+                    by = 'District_Name',na.rm = TRUE)
+ggplot(newdata,aes(x = Truancy_Rate, y = P_Met_or_Exceeded_Expectations),na.rm = TRUE) +
+  geom_point() + geom_smooth(se = TRUE)
+```
+```{r}
+discipline<-read_excel("C:/Users/Ayush/Downloads/IDMP/DS-5110-Group-Project-master/data/CO/Discipline Action by Gender.xlsx")
+newdata <-left_join(filter(parcc,School_Name == 'All Schools',
+                           District_Name != 'All Districts',Content == 'ELA'),discipline,
+                    by = 'District_Name',na.rm = TRUE)
+ggplot(newdata,aes(x = Total_Out_of_School_Suspensions, y = P_Met_or_Exceeded_Expectations),na.rm = TRUE) +
+  geom_point() + geom_smooth(se = TRUE) + facet_wrap(~Gender)
+```
+```{r}
+freelunch<-read_excel("C:/Users/Ayush/Downloads/IDMP/DS-5110-Group-Project-master/data/CO/ELA-FRM.xlsx")
+FL <- filter(freelunch,Test_Grade == 'All Grades',District_Name == 'All Districts')
+
+FL <- gather(FL,"Expectations","Percentage",c(13,15,17,19,21))
+
+ggplot(FL,aes(x = Free_Reduced_Lunch_Status,y = Percentage, fill = Expectations)) + 
+         geom_col(stat="identity", position = position_dodge(width = 1))
+
+
+```
+
