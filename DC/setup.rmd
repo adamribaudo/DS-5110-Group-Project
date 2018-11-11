@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(scales)
 library(modelr)
+library(corrplot)
 
 scores_all_grades <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
   filter(Grade != "ALL") %>% 
@@ -33,8 +34,8 @@ enrollment <- read_csv("data/DC/enrollment-data-17-18.csv") %>% select(-Name)
 
 budget <- read_csv("data/DC/dcpsbudget.ourdcschools.org-budget-data.csv") %>% 
   filter(YEAR == 2018) %>% 
-  select(-WARD, SCHOOLNAME, -LAT,-LON,-YEAR ) %>%
-  mutate(`Per Student Spending`=AMT_ENROLLMENT/TOTALENROLLMENT)
+  select(-WARD, -SCHOOLNAME, -LAT,-LON,-YEAR ) %>%
+  mutate(student_spending=AMT_ENROLLMENT/TOTALENROLLMENT)
 
 dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
   left_join(enrollment, by=c("School Code" = "Code")) %>%
@@ -42,6 +43,8 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
          ela_proficient = `ELA # Proficient`,
          math_tests = `# Math Test Takers`,
          math_proficient = `Math - # Proficient`,
+         math_proficiency = math_proficient/math_tests,
+         ela_proficiency = ela_proficient/ela_tests,
          Uniform = as.factor(Uniform)) %>%
   mutate(Safe_Truancy_Current_Year = as.numeric(sub("%", Safe_Truancy_Current_Year, replacement="")) / 100) %>%
   mutate(Perf_Teachers_Prior_Year = as.numeric(sub("%", Perf_Teachers_Prior_Year, replacement="")) / 100) %>%
@@ -61,11 +64,32 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
   mutate(Demo_White_Total = Demo_White * Enroll_Total) %>% 
   mutate(Demo_Multi_Total = Demo_Multi * Enroll_Total) %>% 
   mutate(Demo_NHawPI_Total = Demo_NHawPI * Enroll_Total) %>%
-  left_join(budget, by=c("School Code" = "SCHOOLCODE"))
-
+  left_join(budget, by=c("School Code" = "SCHOOLCODE")) %>%
+  rename(suspensions=Safe_Suspension_Current_Year) %>%
+  mutate(suspensions = as.numeric(sub("%", suspensions, replacement="")) / 100) %>%
+  mutate(high_suspensions = suspensions > .045) %>%
+  mutate(student_spending_scale = student_spending - 4923) %>%
+  mutate(math_percent_5 = `Math - # Level 5`/`# Math Test Takers`) %>%
+  mutate(math_percent_1 = `Math - # Level 1`/`# Math Test Takers`) %>%
+  mutate(math_percent_1_2 = (`Math - # Level 1`+`Math - # Level 2`)/`# Math Test Takers`)
+  
 ```
 
 # Notes
+
+## Model Building
+Variables of interest:
+- Truancy (transformed respone variable with sqrt())
+- Teacher Retention (no pattern found)
+- Suspensions
+- Budget per student (no real pattern, but maybe something with underperforming students rather than 4-5 proficient)
+- Teacher Salary
+- Teacher / Student Ratio
+
+## Unique Variables
+-ATRISKPCT (clear linear relationship between % of at risk students and proficiency)
+
+
 ## Notes from August 2018 PARCC Presentation
 
 - PARCC scores in DC up for 3rd year in a row across ELA and Math. 33.3% passing in ELA and 29.4% passing in Math.
@@ -98,6 +122,8 @@ summary(dc$`Total Enrolled`)
 ```
 
 ## PARCC Results
+- 12 schools have a math proficiency rate <.02 or 10 times below the median
+
 ```{r}
 dc_math <- dc %>% gather(key=`Math Level`, value=`Math PARCC Outcomes`, `Math - # Level 1`, `Math - # Level 2`, `Math - # Level 3`, `Math - # Level 4`, `Math - # Level 4`, `Math - # Level 5`) %>% select(`Math Level`, `Math PARCC Outcomes`)
 
@@ -130,69 +156,7 @@ dc %>% count(Uniform)
   ggplot(dc) + geom_boxplot(aes(x = Uniform, y=`School Code`  (math_proficient/math_tests)))
 ```
 
-# Exploring Truancy
-- Defined as unexcused absence from school
-- Absence days / Total potential days
 
-```{r}
-summary(dc$Safe_Truancy_Current_Year)
-```
-
-```{r}
-ggplot(dc) + geom_boxplot(aes(y=Safe_Truancy_Current_Year, x=as.factor(Dir_Ward)))
-```
-
-- TODO show median truancy by proficiency
-
-```{r}
-
-dc %>% group_by(Dir_Ward) %>% summarise(med_truancy = median(Safe_Truancy_Current_Year, na.rm=T), proficiency = proficient/total)
-
-```
-
-## Math Test Performance by Truancy Rate
-
-```{r}
-ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = (math_proficient/math_tests)))
-```
-
-# Test Perfomance by Per Student Spending
-## Per Student Spending by Ward
-```{r}
-ggplot(dc %>% select(`Per Student Spending`, Dir_Ward),aes(`Per Student Spending`, color = as.factor(Dir_Ward)), omit.na=T) + geom_freqpoly(binwidth=1000)
-```
-
-```{r}
-summary(dc$`Per Student Spending`)
-```
-
-## Math
-
-```{r}
-ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(math_proficient/math_tests)))
-```
-
-## ELA
-```{r}
-ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(ela_proficient/ela_tests)))
-```
-
-#Teacher Retention
-
-## Current Year
-Would be interesting to look at this outlier schools that have low retention but high scores.
-```{r}
-#Perf_Teachers_Prior_Year
-ggplot(dc) + geom_point(aes(x=Perf_Teachers_Current_Year, y=(math_proficient/math_tests)))
-```
-## Prior Year
-
-```{r}
-#Perf_Teachers_Prior_Year
-
-ggplot(dc) + geom_point(aes(x=Perf_Teachers_Prior_Year, y=(math_proficient/math_tests)))
-
-```
 
 # Test Scores by Demo
 ## Number of students by Demo
@@ -202,16 +166,6 @@ dc_demo <- dc %>% select(select_vars(names(dc), ends_with("_Total")), math_profi
 
 ggplot(dc_demo) + geom_col(aes(x=reorder(Demo, Students), y=Students)) + coord_flip()
 ```
-
-# Model Building
-Variables of interest:
-- Truancy
-- Teacher Retention
-- Suspensions
-- Budget per student
-- Teacher Salary
-- Teacher / Student Ratio
-
 
 
 

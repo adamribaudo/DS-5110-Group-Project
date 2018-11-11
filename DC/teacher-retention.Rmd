@@ -1,0 +1,38 @@
+---
+title: "teacher-retention"
+author: "Adam Ribaudo"
+date: "November 11, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+- Variable defined as "Retention of effective and highly effective teachers- Current Year"
+- Teacher retention ranges from 75% to 100% with a median of 93%
+- Doesn't seem to be a trend between retention and performance
+- National average is apparently 85%
+- Don't know why retention rates look so high when online articles say it's worse:https://wamu.org/story/18/10/03/high-salaries-high-turnover-d-c-public-schools-study-finds/
+- In 2012, DCPS launched the Leadership Initiative for Teachers (LIFT), a five-stage career ladder on which teachers advance based on their annual performance rating. 
+
+```{r}
+summary(dc$Perf_Teachers_Current_Year)
+```
+
+```{r}
+corrplot(dc %>% select(ela_proficiency, math_proficiency, Perf_Teachers_Current_Year, Perf_Teachers_Prior_Year) %>% na.omit() %>% cor(), is.corr=T)
+```
+
+```{r}
+ggplot(dc) + geom_histogram(aes(x=Perf_Teachers_Current_Year))
+```
+
+```{r}
+ggplot(dc) + geom_point(aes(y=math_proficiency, x=Perf_Teachers_Current_Year))
+```
+
+```{r}
+ggplot(dc) + geom_point(aes(y=ela_proficiency, x=Perf_Teachers_Current_Year))
+```
