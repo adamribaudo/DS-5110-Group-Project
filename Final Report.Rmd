@@ -35,11 +35,13 @@ Maybe
 
 # Results
 
+* Break this section up by DC, MA, CO
 * Show most interesting findings in charts / figures
 
 # Discussion
 
 * Talk about how this might affect school decision making
+* What areas would we explore further given more time?
 
 # Statement of Contribution
 # References

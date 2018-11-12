@@ -31,5 +31,5 @@ ggplot(dc) + geom_point(aes(x=student_spending_scale, y=math_percent_1_2, color=
 
 ## ELA
 ```{r}
-ggplot(dc) + geom_point(aes(x=`Per Student Spending`, y=(ela_proficient/ela_tests)))
+ggplot(dc) + geom_point(aes(x=student_spending_scale, y=(ela_proficient/ela_tests)))
 ```

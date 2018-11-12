@@ -2,7 +2,7 @@
 title: "DC Prelim Data"
 author: "Adam R"
 date: "November 3, 2018"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -17,22 +17,22 @@ library(scales)
 library(modelr)
 library(corrplot)
 
-scores_all_grades <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+scores_all_grades <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
   filter(Grade != "ALL") %>% 
   filter(`School Code` != "DCPS") %>%
   mutate(`School Code` = as.numeric(`School Code`))
 
-scores <- read_csv("data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+scores <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
   filter(Grade == "ALL") %>% #Show all grades
   select(-Grade) %>%
   filter(`School Code` != "DCPS") %>%
   mutate(`School Code` = as.numeric(`School Code`))
 
-schools <- read_csv("data/DC/dcps_school_scorecard_17_18_trimmed.csv") 
+schools <- read_csv("../data/DC/dcps_school_scorecard_17_18_trimmed.csv") 
 
-enrollment <- read_csv("data/DC/enrollment-data-17-18.csv") %>% select(-Name)
+enrollment <- read_csv("../data/DC/enrollment-data-17-18.csv") %>% select(-Name)
 
-budget <- read_csv("data/DC/dcpsbudget.ourdcschools.org-budget-data.csv") %>% 
+budget <- read_csv("../data/DC/dcpsbudget.ourdcschools.org-budget-data.csv") %>% 
   filter(YEAR == 2018) %>% 
   select(-WARD, -SCHOOLNAME, -LAT,-LON,-YEAR ) %>%
   mutate(student_spending=AMT_ENROLLMENT/TOTALENROLLMENT)
@@ -78,13 +78,24 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
 # Notes
 
 ## Model Building
+
 Variables of interest:
-- Truancy (transformed respone variable with sqrt())
-- Teacher Retention (no pattern found)
-- Suspensions
-- Budget per student (no real pattern, but maybe something with underperforming students rather than 4-5 proficient)
-- Teacher Salary
-- Teacher / Student Ratio
+
+* Truancy
+  + Pattern found after transforming respone variable with sqrt()
+* Teacher Retention
+  + no pattern found
+* Suspensions
+  + strong pattern after converting it to binary yes/no for 'high # of suspensions'
+* Budget per student 
+  + no real pattern
+* Teacher Salary
+  + Don't have this per school 
+  + $84,765 average 2017-2018 
+* Teacher / Student Ratio
+  + 11.49 according to Google
+  + 4012 teachers 2017-2018
+  + Tweeted at them on 11/11
 
 ## Unique Variables
 -ATRISKPCT (clear linear relationship between % of at risk students and proficiency)
@@ -153,7 +164,7 @@ dc %>% count(Uniform)
 ```
 
 ```{r}
-  ggplot(dc) + geom_boxplot(aes(x = Uniform, y=`School Code`  (math_proficient/math_tests)))
+  ggplot(dc) + geom_boxplot(aes(x = Uniform, y=math_proficiency))
 ```
 
 
@@ -161,8 +172,8 @@ dc %>% count(Uniform)
 # Test Scores by Demo
 ## Number of students by Demo
 ```{r}
-dc_demo <- dc %>% select(select_vars(names(dc), ends_with("_Total")), math_proficiency, Enroll_Total) %>%
-  gather(key="Demo", value="Students", select_vars(names(dc_demo), starts_with("Demo")))
+dc_demo <- dc %>% select(select_vars(names(dc), ends_with("_Total")), math_proficiency, Enroll_Total) 
+dc_demo <- dc_demo %>% gather(key="Demo", value="Students", select_vars(names(dc_demo), starts_with("Demo")))
 
 ggplot(dc_demo) + geom_col(aes(x=reorder(Demo, Students), y=Students)) + coord_flip()
 ```
