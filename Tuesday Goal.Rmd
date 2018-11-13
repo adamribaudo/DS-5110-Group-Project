@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(ggplot2)
+library(tidyr)
 ```
 
 1. By Truancy
@@ -25,7 +26,8 @@ absentism <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/d
 scores <- scores %>%
   filter(District_Name != "All Districts",School_Name == "All Schools",
          Content == "English Language Arts", Test_Grade == "All Grades",
-         !is.na(Percent_Met_or_Exceeded_Expectations))
+         !is.na(Percent_Met_or_Exceeded_Expectations),
+         !is.na(Valid_Scores))
 scores%>%
   left_join(absentism, by = 'District_Name') %>%
   ggplot() + geom_line(aes(x = Truancy_Rate,
@@ -68,7 +70,20 @@ discipline <- read_excel(
 
 discipline <- discipline %>%
               transmute(District_Name = District_Name,Suspensions =     
-                        Total_Out_of_School_Suspensions,Gender = Gender)
+                        Total_Out_of_School_Suspensions,Gender = Gender)%>%
+              spread(Gender,Suspensions)%>%
+              mutate(Suspensions = Male + Female)%>%
+              select(-c(2:4)) %>%
+              filter(!is.na(Suspensions))
+scores %>% 
+  inner_join(discipline, by = "District_Name") %>%
+  mutate(DiscRatio = (Suspensions/as.numeric(Valid_Scores)) * 100)%>%
+  ggplot(aes(x = DiscRatio,y = as.numeric(Percent_Met_or_Exceeded_Expectations))) + 
+  geom_point() +
+  geom_smooth() +
+  xlab("Discipline Percentage")+
+  ylab("Percentage Met or Exceeded Expectations")+
+  scale_x_continuous()
 
 
 
