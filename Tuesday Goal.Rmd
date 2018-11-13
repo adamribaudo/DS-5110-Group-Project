@@ -1,0 +1,119 @@
+---
+title: "Preliminary Data Analysis"
+author: "Ayush Bhandari"
+date: "November 5, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+```
+
+1. By Truancy
+
+```{r}
+scores <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2018 PARCC data.xlsx")
+
+absentism <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/Chronically Absent by District 2017-18xls.xlsx")
+
+scores <- scores %>%
+  filter(District_Name != "All Districts",School_Name == "All Schools",
+         Content == "English Language Arts", Test_Grade == "All Grades",
+         !is.na(Percent_Met_or_Exceeded_Expectations))
+scores%>%
+  left_join(absentism, by = 'District_Name') %>%
+  ggplot() + geom_line(aes(x = Truancy_Rate,
+                      y = as.numeric(Percent_Met_or_Exceeded_Expectations),na.rm = TRUE)) +
+    scale_y_continuous() +
+    xlab("Truancy Rate") +
+    ylab("Percentage Met or Exceeded Expectations")
+
+```
+
+By Teacher Retention
+
+```{r }
+turnover <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2017-18 Personnel Turnover Rate by District and Position Categories.xlsx")
+
+turnover <- turnover%>%filter(Job_Classification == 'Teachers',!is.na(Turnover_Rate))%>%
+            transmute(Retention_Rate = (1-Turnover_Rate) * 100,District_Name=District_Name)
+
+scores%>%
+  left_join(turnover, by = 'District_Name') %>%
+  ggplot(aes(x = Retention_Rate,
+                      y = as.numeric(Percent_Met_or_Exceeded_Expectations))) + geom_point() +
+    geom_smooth()+
+    scale_y_continuous() +
+    xlab("Retention Rate") +
+    ylab("Percentage Met or Exceeded Expectations")
+
+
+
+
+
+
+```
+
+By Disciplinary Action
+
+```{r}
+discipline <- read_excel(
+"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/Discipline by Gender 2017-18 Corrected.xlsx")
+
+discipline <- discipline %>%
+              transmute(District_Name = District_Name,Suspensions =     
+                        Total_Out_of_School_Suspensions,Gender = Gender)
+
+
+
+```
+
+By Budget Per Student
+
+```{r}
+budget <- read_excel(
+"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/RescissionsFY2017-18 with Per Pupil Funding.xls")
+
+scores%>%
+  left_join(budget, by = 'District_Name') %>%
+  ggplot() + geom_point(aes(x = as.numeric(FINAL_Adjusted_District_In_School_Per_Pupil_Funding),
+                      y = as.numeric(Percent_Met_or_Exceeded_Expectations))) +
+    scale_y_continuous() +
+    xlab("Budget Per Student") +
+    ylab("Percentage Met or Exceeded Expectations")
+
+```
+
+
+
+```{r}
+
+salaries <- read_excel(
+"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2017-18 Average Salaries for Teachers.xlsx")
+
+
+scores%>%
+  left_join(salaries, by = 'District_Name') %>%
+  ggplot() + geom_point(aes(x = as.numeric(Average_Salary),
+                      y = as.numeric(Percent_Met_or_Exceeded_Expectations))) +
+    scale_y_continuous() +
+    xlab("Avaerage Teacher Salaries") +
+    ylab("Percentage Met or Exceeded Expectations")
+
+```
+
+Student Teacher Ratio
+
+
+```{r}
+stratios <- read_excel(
+"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2017-18 Student Teacher Ratios.xlsx")
+
+```
+
