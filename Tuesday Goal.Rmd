@@ -19,9 +19,11 @@ library(tidyr)
 1. By Truancy
 
 ```{r}
-scores <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2018 PARCC data.xlsx")
+#path = ""   ## use if relative path
+path <- "C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/"
+scores <- read_excel(paste0(path,"data/CO/2017-2018/2018 PARCC data.xlsx"))
 
-absentism <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/Chronically Absent by District 2017-18xls.xlsx")
+absentism <- read_excel(paste0(path,"data/CO/2017-2018/Chronically Absent by District 2017-18xls.xlsx"))
 
 scores <- scores %>%
   filter(District_Name != "All Districts",School_Name == "All Schools",
@@ -41,7 +43,7 @@ scores%>%
 By Teacher Retention
 
 ```{r }
-turnover <- read_excel("C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2017-18 Personnel Turnover Rate by District and Position Categories.xlsx")
+turnover <- read_excel(paste0(path,"data/CO/2017-2018/2017-18 Personnel Turnover Rate by District and Position Categories.xlsx"))
 
 turnover <- turnover%>%filter(Job_Classification == 'Teachers',!is.na(Turnover_Rate))%>%
             transmute(Retention_Rate = (1-Turnover_Rate) * 100,District_Name=District_Name)
@@ -66,7 +68,7 @@ By Disciplinary Action
 
 ```{r}
 discipline <- read_excel(
-"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/Discipline by Gender 2017-18 Corrected.xlsx")
+paste0(path,"data/CO/2017-2018/Discipline by Gender 2017-18 Corrected.xlsx"))
 
 discipline <- discipline %>%
               transmute(District_Name = District_Name,Suspensions =     
@@ -92,8 +94,7 @@ scores %>%
 By Budget Per Student
 
 ```{r}
-budget <- read_excel(
-"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/RescissionsFY2017-18 with Per Pupil Funding.xls")
+budget <- read_excel(paste0(path,"data/CO/2017-2018/RescissionsFY2017-18 with Per Pupil Funding.xls"))
 
 scores%>%
   left_join(budget, by = 'District_Name') %>%
@@ -110,13 +111,14 @@ scores%>%
 ```{r}
 
 salaries <- read_excel(
-"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2017-18 Average Salaries for Teachers.xlsx")
+paste0(path,"data/CO/2017-2018/2017-18 Average Salaries for Teachers.xlsx"))
 
 
 scores%>%
   left_join(salaries, by = 'District_Name') %>%
-  ggplot() + geom_point(aes(x = as.numeric(Average_Salary),
-                      y = as.numeric(Percent_Met_or_Exceeded_Expectations))) +
+  ggplot(aes(x = as.numeric(Average_Salary),
+                      y = as.numeric(Percent_Met_or_Exceeded_Expectations))) + geom_point() +
+  geom_smooth()+
     scale_y_continuous() +
     xlab("Avaerage Teacher Salaries") +
     ylab("Percentage Met or Exceeded Expectations")
@@ -128,7 +130,7 @@ Student Teacher Ratio
 
 ```{r}
 stratios <- read_excel(
-"C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/data/CO/2017-2018/2017-18 Student Teacher Ratios.xlsx")
+paste0(path,"data/CO/2017-2018/2017-18 Student Teacher Ratios.xlsx"))
 
 ```
 
