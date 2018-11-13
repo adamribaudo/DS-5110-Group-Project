@@ -1,0 +1,40 @@
+---
+title: "suspensions"
+author: "Adam Ribaudo"
+date: "November 11, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+- Out-of-school suspensions- Current Year - % of students with OOS suspensions
+- Can model based on suspension if we transform it into a booean (yes/no for high suspensions). High suspension is defined as > median
+
+```{r}
+summary(dc$suspensions)
+```
+
+```{r}
+ggplot(dc) + geom_histogram(aes(x=suspensions))
+```
+
+```{r}
+ggplot(dc) + geom_point(aes(x=suspensions,y=(ela_proficiency)))
+```
+
+```{r}
+ggplot(dc) + geom_boxplot(aes(x=high_suspensions, y=math_proficiency))
+```
+
+```{r}
+fit <- lm(data=dc, math_proficiency ~ high_suspensions)
+summary(fit)
+dc <- dc %>% add_residuals(fit)
+ggplot(dc) + geom_point(aes(x=high_suspensions, y=resid))
+
+```
+
+Residuals don't look especially normal, but there's clearly an influence

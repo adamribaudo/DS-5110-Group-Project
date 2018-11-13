@@ -1,0 +1,35 @@
+---
+title: "student-spending"
+author: "Adam Ribaudo"
+date: "November 11, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Overview
+- From dcpsbudget.ourdcschools.org-budget-data.csv
+
+
+
+# Test Perfomance by Per Student Spending
+## Per Student Spending by Ward
+```{r}
+ggplot(dc %>% select(student_spending, Dir_Ward),aes(student_spending, color = as.factor(Dir_Ward)), omit.na=T) + geom_freqpoly(binwidth=1000)
+```
+
+```{r}
+summary(dc$student_spending)
+```
+
+
+```{r}
+ggplot(dc) + geom_point(aes(x=student_spending_scale, y=math_percent_1_2, color=high_suspensions))
+```
+
+## ELA
+```{r}
+ggplot(dc) + geom_point(aes(x=student_spending_scale, y=(ela_proficient/ela_tests)))
+```

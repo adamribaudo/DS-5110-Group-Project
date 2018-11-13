@@ -1,0 +1,234 @@
+---
+title: "DC Prelim Data"
+author: "Adam R"
+date: "November 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+library(tidyverse)
+library(scales)
+library(modelr)
+library(corrplot)
+
+scores_all_grades <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+  filter(Grade != "ALL") %>% 
+  filter(`School Code` != "DCPS") %>%
+  mutate(`School Code` = as.numeric(`School Code`))
+
+scores <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+  filter(Grade == "ALL") %>% #Show all grades
+  select(-Grade) %>%
+  filter(`School Code` != "DCPS") %>%
+  mutate(`School Code` = as.numeric(`School Code`))
+
+schools <- read_csv("../data/DC/dcps_school_scorecard_17_18_trimmed.csv") 
+
+enrollment <- read_csv("../data/DC/enrollment-data-17-18.csv") %>% select(-Name)
+
+budget <- read_csv("../data/DC/dcpsbudget.ourdcschools.org-budget-data.csv") %>% 
+  filter(YEAR == 2018) %>% 
+  select(-WARD, -SCHOOLNAME, -LAT,-LON,-YEAR ) %>%
+  mutate(student_spending=AMT_ENROLLMENT/TOTALENROLLMENT)
+
+dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
+  left_join(enrollment, by=c("School Code" = "Code")) %>%
+  mutate(ela_tests = `# of English Language Arts (ELA) Test Takers`,
+         ela_proficient = `ELA # Proficient`,
+         math_tests = `# Math Test Takers`,
+         math_proficient = `Math - # Proficient`,
+         math_proficiency = math_proficient/math_tests,
+         ela_proficiency = ela_proficient/ela_tests,
+         Uniform = as.factor(Uniform)) %>%
+  mutate(Safe_Truancy_Current_Year = as.numeric(sub("%", Safe_Truancy_Current_Year, replacement="")) / 100) %>%
+  mutate(Perf_Teachers_Prior_Year = as.numeric(sub("%", Perf_Teachers_Prior_Year, replacement="")) / 100) %>%
+  mutate(Perf_Teachers_Current_Year = as.numeric(sub("%", Perf_Teachers_Current_Year, replacement="")) / 100) %>%
+  mutate(math_proficiency = math_proficient / math_tests) %>%
+  mutate(Demo_Asian = as.numeric(sub("%", Demo_Asian, replacement="")) / 100) %>% 
+  mutate(Demo_Black = as.numeric(sub("%", Demo_Black, replacement="")) / 100) %>% 
+  mutate(Demo_Hispanic = as.numeric(sub("%", Demo_Hispanic, replacement="")) / 100) %>% 
+  mutate(`Demo_N.Amer` = as.numeric(sub("%", `Demo_N.Amer`, replacement="")) / 100) %>% 
+  mutate(Demo_White = as.numeric(sub("%", Demo_White, replacement="")) / 100) %>% 
+  mutate(Demo_Multi = as.numeric(sub("%", Demo_Multi, replacement="")) / 100) %>% 
+  mutate(Demo_NHawPI = as.numeric(sub("%", Demo_NHawPI, replacement="")) / 100) %>%
+  mutate(Demo_Asian_Total = Demo_Asian * Enroll_Total) %>% 
+  mutate(Demo_Black_Total = Demo_Black * Enroll_Total) %>% 
+  mutate(Demo_Hispanic_Total = Demo_Hispanic * Enroll_Total) %>% 
+  mutate(Demo_NAmer_Total = `Demo_N.Amer` * Enroll_Total) %>% 
+  mutate(Demo_White_Total = Demo_White * Enroll_Total) %>% 
+  mutate(Demo_Multi_Total = Demo_Multi * Enroll_Total) %>% 
+  mutate(Demo_NHawPI_Total = Demo_NHawPI * Enroll_Total) %>%
+  left_join(budget, by=c("School Code" = "SCHOOLCODE")) %>%
+  rename(suspensions=Safe_Suspension_Current_Year) %>%
+  mutate(suspensions = as.numeric(sub("%", suspensions, replacement="")) / 100) %>%
+  mutate(high_suspensions = suspensions > .045) %>%
+  mutate(student_spending_scale = student_spending - 4923) %>%
+  mutate(math_percent_5 = `Math - # Level 5`/`# Math Test Takers`) %>%
+  mutate(math_percent_1 = `Math - # Level 1`/`# Math Test Takers`) %>%
+  mutate(math_percent_1_2 = (`Math - # Level 1`+`Math - # Level 2`)/`# Math Test Takers`) %>%
+  mutate(Any_Care = After_care == "yes" | Before_care == "yes")
+  
+```
+
+# Notes
+
+## Model Building
+
+Variables of interest:
+
+* Truancy
+  + Safe_Truancy_Current_Year
+  + Pattern found after transforming respone variable with sqrt()
+* Teacher Retention
+  + Perf_Teachers_Current_Year
+  + no pattern found
+* Suspensions
+  + suspensions
+  + strong pattern after converting it to binary yes/no for 'high # of suspensions'
+* Budget per student 
+  + student_spending
+  + no real pattern
+* Teacher Salary
+  + Don't have this per school 
+  + $84,765 average 2017-2018 
+* Teacher / Student Ratio
+  + 11.49 according to Google
+  + 4012 teachers 2017-2018
+  + Tweeted at them on 11/11
+* After/Before School Care
+  + Any_Care
+  + Strong correlation with test scores
+
+## Unique Variables
+-ATRISKPCT (clear linear relationship between % of at risk students and proficiency)
+
+## Notes from August 2018 PARCC Presentation
+
+- PARCC scores in DC up for 3rd year in a row across ELA and Math. 33.3% passing in ELA and 29.4% passing in Math.
+
+## Notes from http://dcpsbudget.ourdcschools.org/
+
+- While individual school budgets account for roughly 85% of total educational expenditures in the DCPS school system, they do not cover everything. Central office, textbooks, athletics, special education related services other than psychologists and social workers, utilities, security, food service, and maintenance all fall outside individual school budgets and so are not shown above.
+
+- The result is that per pupil allocations for general education vary widely from school to school with variable correlation to enrollment. 
+
+- The at-risk allocation is based on the number of students that are at-risk of academic failure based on one or more of the following: homeless, in the District's foster care system, receiving Temporary Assistance for Needy Families (TANF) or the Supplemental Nutrition Assistance Program (SNAP), or in high school only, are at least one year older than the expected age for their grade. According to DC law, at-risk funds are supposed to follow the student to his or her school.
+
+## Notes from https://dcps.dc.gov/node/966292
+
+- Total # of schools is 116 (but we only have 111 schools with PARCC results)
+
+## Notes from Bellweather Teacher retention report
+https://bellwethereducation.org/publication/retaining-high-performers-insights-dc-public-schools-teacher-exit-survey
+
+# Summary Stats
+## Enrollment
+```{r}
+
+ggplot(dc) + geom_col(width=1,aes(x=reorder(as.factor(`School Code`),`Total Enrolled`), y=`Total Enrolled`)) + coord_flip() + xlab("School Code") + ylab("Total Enrolled Students") + labs(title="Students Enrolled by School (n=111)")
+
+```
+
+```{r}
+summary(dc$`Total Enrolled`)
+```
+
+## PARCC Results
+- 12 schools have a math proficiency rate <.02 or 10 times below the median
+
+```{r}
+dc_math <- dc %>% gather(key=`Math Level`, value=`Math PARCC Outcomes`, `Math - # Level 1`, `Math - # Level 2`, `Math - # Level 3`, `Math - # Level 4`, `Math - # Level 4`, `Math - # Level 5`) %>% select(`Math Level`, `Math PARCC Outcomes`)
+
+ggplot(dc_math) + geom_col(aes(x=`Math Level`, y=`Math PARCC Outcomes`))
+```
+
+## PARCC Results by Ward
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dc %>% group_by(Dir_Ward) %>% summarise(`ELA Test Takers`=sum(`# of English Language Arts (ELA) Test Takers`, na.rm=T), 
+                                             `ELA Proficient`=sum(`ELA # Proficient`, na.rm=T)) %>%
+  mutate(`% ELA Proficient` = percent(`ELA Proficient` / `ELA Test Takers`)) %>%
+  arrange(`% ELA Proficient`)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dc %>% group_by(Dir_Ward) %>% summarise(`Math Test Takers`=sum(`# Math Test Takers`, na.rm=T), 
+                                             `Math Proficient`=sum(`Math - # Proficient`, na.rm=T)) %>%
+  mutate(`% Math Proficient` = percent(`Math Proficient` / `Math Test Takers`)) %>%
+  arrange(`% Math Proficient`)
+```
+
+# Math Test Results by School Uniform
+
+```{r}
+dc %>% count(Uniform)
+```
+
+```{r}
+  ggplot(dc) + geom_boxplot(aes(x = Uniform, y=math_proficiency))
+```
+
+
+
+# Test Scores by Demo
+## Number of students by Demo
+```{r}
+dc_demo <- dc %>% select(select_vars(names(dc), ends_with("_Total")), math_proficiency, Enroll_Total) 
+dc_demo <- dc_demo %>% gather(key="Demo", value="Students", select_vars(names(dc_demo), starts_with("Demo")))
+
+ggplot(dc_demo) + geom_col(aes(x=reorder(Demo, Students), y=Students)) + coord_flip()
+```
+
+
+
+```{r}
+
+fit <- lm(data=dc, math_proficiency ~ (Demo_Black))
+summary(fit)
+
+grid <- dc %>% data_grid(Demo_Black) %>% add_predictions(fit)
+
+ggplot(dc, aes(Demo_Black, math_proficiency)) + 
+  geom_point() + 
+  geom_line(data = grid, aes(y = pred))
+
+dc <- dc %>% add_residuals(fit)
+ggplot(dc) + geom_point(aes(x=Demo_Black,y=resid)) 
+# Is there a way to add a line based on intercept, coef alone?
+
+#When I add Hispanic, the prediction for Demo_White/Asian turns negative??
+#Compare below to fit <- lm(data=dc, math_proficiency ~ Demo_Black + Demo_Asian + Demo_White)
+fit <- lm(data=dc, math_proficiency ~ Demo_Black + Demo_Asian + Demo_White + Demo_Hispanic)
+summary(fit)
+
+```
+
+# Facility
+
+Having a pool does not help with test scores (but only 7 schools with pools)
+
+```{r}
+
+dc_facil <- dc %>% select(select_vars(names(dc), starts_with("Facil")), math_proficiency, ela_proficiency) %>% gather(key="Facility", value="Has_Facility", select_vars(names(dc), starts_with("Facil")))
+
+ggplot(dc_facil %>% filter(Has_Facility == "yes")) + geom_boxplot(aes(x=Facility, y=math_proficiency))
+
+```
+
+# After/Before Care
+
+```{r}
+dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficiency) %>%
+  gather(key="Care_Type", value="Care_Value", After_care, Before_care) %>% unite(Care_Type, Care_Value, col="Care", sep=" ")
+
+dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficiency) %>% mutate(Any_Care = After_care == "yes" | Before_care == "yes")
+
+ggplot(dc_care) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
+                         
+```

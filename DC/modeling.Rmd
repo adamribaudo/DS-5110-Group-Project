@@ -1,0 +1,37 @@
+---
+title: "Modeling"
+author: "Adam Ribaudo"
+date: "November 13, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Variables of interest
+
+* Truancy
+  + Safe_Truancy_Current_Year
+  + Pattern found after transforming respone variable with sqrt()
+* Teacher Retention
+  + Perf_Teachers_Current_Year
+  + no pattern found
+* Suspensions
+  + suspensions
+  + strong pattern after converting it to binary yes/no for 'high # of suspensions'
+* Budget per student 
+  + student_spending
+  + no real pattern
+* Teacher Salary
+  + Don't have this per school 
+  + $84,765 average 2017-2018 
+* Teacher / Student Ratio
+  + 11.49 according to Google
+  + 4012 teachers 2017-2018
+  + Tweeted at them on 11/11
+* After/Before School Care
+  + Any_Care
+  + Strong correlation with test scores
+  
+## Modeling

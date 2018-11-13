@@ -1,0 +1,48 @@
+---
+title: "Modeling Standardized Test Performance to Find Areas for Improvement"
+author: "Adam Ribaudo"
+date: "November 8, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+# Summary
+*Summarize the background of the project (i.e., what is the problem to be solved or the question to be answer), any related work, a description of the data, and a brief, non-technical description of your methods and results.*
+
+- Describe what PARCC is
+- We want to help education administrators determine which variables they should look at in order to improve test performance
+- Variables we looked at in common are...
+- Main take-aways for each region and overall
+
+# Methods
+*A technical description of the methods you used in the project. This may be a description of the steps of data tidying, transformation, and modeling you performed, or it may be a description of the implementation and functionality of a software tool, whichever is appropriate for your project.*
+
+* Tidy data. This presented individual challenges for each region as there were a variety of formats and data sets spread across various agencies and non-profits (maybe print a few examples?)
+  + Talk about joining data from disparate data sets
+* Visualization
+* Determine variables of interest and variables in common
+* Modeling for individual regions. Looking at results when applied to other regions.
+* Something about looking into the real-world impact of the suggestions?
+
+Maybe 
+
+# Results
+
+* Break this section up by DC, MA, CO
+* Show most interesting findings in charts / figures
+
+# Discussion
+
+* Talk about how this might affect school decision making
+* What areas would we explore further given more time?
+
+# Statement of Contribution
+# References
+# Appendix
