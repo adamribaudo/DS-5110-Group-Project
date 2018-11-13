@@ -71,7 +71,8 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
   mutate(student_spending_scale = student_spending - 4923) %>%
   mutate(math_percent_5 = `Math - # Level 5`/`# Math Test Takers`) %>%
   mutate(math_percent_1 = `Math - # Level 1`/`# Math Test Takers`) %>%
-  mutate(math_percent_1_2 = (`Math - # Level 1`+`Math - # Level 2`)/`# Math Test Takers`)
+  mutate(math_percent_1_2 = (`Math - # Level 1`+`Math - # Level 2`)/`# Math Test Takers`) %>%
+  mutate(Any_Care = After_care == "yes" | Before_care == "yes")
   
 ```
 
@@ -82,12 +83,16 @@ dc <- scores %>% left_join(schools, by=c("School Code" = "Dir_School_Code")) %>%
 Variables of interest:
 
 * Truancy
+  + Safe_Truancy_Current_Year
   + Pattern found after transforming respone variable with sqrt()
 * Teacher Retention
+  + Perf_Teachers_Current_Year
   + no pattern found
 * Suspensions
+  + suspensions
   + strong pattern after converting it to binary yes/no for 'high # of suspensions'
 * Budget per student 
+  + student_spending
   + no real pattern
 * Teacher Salary
   + Don't have this per school 
@@ -96,10 +101,12 @@ Variables of interest:
   + 11.49 according to Google
   + 4012 teachers 2017-2018
   + Tweeted at them on 11/11
+* After/Before School Care
+  + Any_Care
+  + Strong correlation with test scores
 
 ## Unique Variables
 -ATRISKPCT (clear linear relationship between % of at risk students and proficiency)
-
 
 ## Notes from August 2018 PARCC Presentation
 
@@ -200,4 +207,28 @@ ggplot(dc) + geom_point(aes(x=Demo_Black,y=resid))
 fit <- lm(data=dc, math_proficiency ~ Demo_Black + Demo_Asian + Demo_White + Demo_Hispanic)
 summary(fit)
 
+```
+
+# Facility
+
+Having a pool does not help with test scores (but only 7 schools with pools)
+
+```{r}
+
+dc_facil <- dc %>% select(select_vars(names(dc), starts_with("Facil")), math_proficiency, ela_proficiency) %>% gather(key="Facility", value="Has_Facility", select_vars(names(dc), starts_with("Facil")))
+
+ggplot(dc_facil %>% filter(Has_Facility == "yes")) + geom_boxplot(aes(x=Facility, y=math_proficiency))
+
+```
+
+# After/Before Care
+
+```{r}
+dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficiency) %>%
+  gather(key="Care_Type", value="Care_Value", After_care, Before_care) %>% unite(Care_Type, Care_Value, col="Care", sep=" ")
+
+dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficiency) %>% mutate(Any_Care = After_care == "yes" | Before_care == "yes")
+
+ggplot(dc_care) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
+                         
 ```
