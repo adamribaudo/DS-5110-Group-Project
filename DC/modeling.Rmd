@@ -34,4 +34,75 @@ knitr::opts_chunk$set(echo = TRUE)
   + Any_Care
   + Strong correlation with test scores
   
-## Modeling
+# Modeling
+## Truancy
+```{r}
+
+ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = sqrt(math_proficiency)))
+
+fit1 <- lm(data=dc,sqrt(math_proficiency) ~ Safe_Truancy_Current_Year)
+dc <- dc %>% add_residuals(fit)
+ggplot(dc) + geom_point(aes(x=Safe_Truancy_Current_Year, y=resid))
+
+```
+
+## Teacher Retention - No Pattern
+
+```{r}
+
+fit2 <- lm(data=dc,sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + Perf_Teachers_Current_Year)
+summary(fit2)
+```
+
+
+## Suspensions
+```{r}
+ggplot(dc) + geom_point(aes(x=suspensions, y=resid))
+
+fit3 <- lm(data=dc, sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + suspensions)
+summary(fit3)
+dc <- dc %>% add_residuals(fit3)
+
+ggplot(dc) + geom_point(aes(x=suspensions, y=resid))
+ggplot(dc) + geom_point(aes(x=Safe_Truancy_Current_Year, y=resid))
+#ggplot(dc) + geom_point(aes(x=sqrt(math_proficiency), y=resid)) # not sure what's going on here
+```
+
+## Student Spending - No Pattern
+```{r}
+ggplot(dc) + geom_point(aes(x=student_spending_scale, y=resid))
+fit4 <- lm(data=dc, sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + high_suspensions + student_spending)
+summary(fit4)
+
+```
+
+## After/Before Care
+
+- Surprised to see that after taking out truancy and suspension, after care has negative effect on performance
+
+```{r}
+
+
+ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid))
+ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
+fit5 <- lm(data=dc, sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + high_suspensions + Any_Care)
+summary(fit5)
+```
+
+# Visualize Model
+```{r}
+dc <- dc %>% add_residuals(fit3) %>% add_predictions(fit3)
+ggplot(dc) + geom_point(aes(x=pred, y=sqrt(math_proficiency)))
+
+ggplot(dc) + geom_point(aes(x=Safe_Truancy_Current_Year, y=suspensions))
+
+grid <- dc %>% 
+  data_grid(suspensions, Safe_Truancy_Current_Year) %>% add_predictions(fit3) %>%
+  mutate(pred_binary = pred > .267)
+
+ggplot(grid) + geom_point(aes(x=suspensions, y=Safe_Truancy_Current_Year, color=pred_binary))
+
+rmse(data=dc,fit3) # do I need to square this?
+
+
+```
