@@ -21,7 +21,7 @@ parcc_tib<-parcc_tib%>%mutate(sch_code = `Org Code`,
 
 
 ###################### Total students and overall PARCC Passing 
-enr<-read_excel("~/Downloads/District-Grade.xlsx",na="N/A")%>%filter(Gr.4 != '***')
+enr<-read_excel("./data/MA/District-Grade.xlsx",na="N/A")%>%filter(Gr.4 != '***')
 sum(enr$District_Total, na.rm=T) #total student enrollment
 
 #student enrollment grade 3-8
@@ -30,7 +30,7 @@ enr%>%summarise(el_gr = sum(as.numeric(Gr.3), na.rm = T)+sum(as.numeric(Gr.4), n
                   sum(as.numeric(Gr.7), na.rm = T)+sum(as.numeric(Gr.8), na.rm = T))
   
 #math
-district<-read_excel("~/Downloads/parcc.xls", skip = 7, na = "N/A")
+district<-read_excel("./data/MA/parcc.xls", skip = 7, na = "N/A")
 sum(district$`Stud. Incl. #`, na.rm = T)
 district%>%summarise(testers = sum(`Stud. Incl. #`, na.rm = T),
                      l4 = sum(`L4 #`, na.rm = T),
@@ -38,7 +38,7 @@ district%>%summarise(testers = sum(`Stud. Incl. #`, na.rm = T),
   mutate(passing = (l4+l5)/testers)
 
 #ela
-dis_ela<-read_excel("~/Downloads/parcc_ela.xls", skip = 7, na = "N/A")
+dis_ela<-read_excel("./data/MA/parcc_ela.xls", skip = 7, na = "N/A")
 sum(dis_ela$`Stud. Incl. #`, na.rm = T)
 dis_ela%>%summarise(testers = sum(`Stud. Incl. #`, na.rm = T),
                      l4 = sum(`L4 #`, na.rm = T),
