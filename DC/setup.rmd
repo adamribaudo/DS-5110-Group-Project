@@ -232,3 +232,12 @@ dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficie
 ggplot(dc_care) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
                          
 ```
+
+# Spending
+
+```{r}
+
+corrplot(dc %>% select(select_vars(names(dc), starts_with("AMT")), math_proficiency) %>% cor(use="pairwise.complete.obs"), is.corr=T,method = "circle")
+
+
+```

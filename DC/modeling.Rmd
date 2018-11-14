@@ -98,7 +98,7 @@ ggplot(dc) + geom_point(aes(x=Safe_Truancy_Current_Year, y=suspensions))
 
 grid <- dc %>% 
   data_grid(suspensions, Safe_Truancy_Current_Year) %>% add_predictions(fit3) %>%
-  mutate(pred_binary = pred > .267)
+  mutate(pred_binary = pred > .309)
 
 ggplot(grid) + geom_point(aes(x=suspensions, y=Safe_Truancy_Current_Year, color=pred_binary))
 
