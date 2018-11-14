@@ -11,7 +11,7 @@ parcc_tib<-parcc_tot[[1]]
 for(i in 2:length(parcc_tot)){
   parcc_tib<-union(parcc_tib, parcc_tot[[i]])
 }
-rx<-"[\QGRADE \E|\QGRADES \E]"
+
 parcc_tib<-parcc_tib%>%mutate(sch_code = `Org Code`,
                               dis_code = substr(`Org Code`, 1,4))%>%
   mutate(`Grade/Subject` = str_replace(`Grade/Subject`, "GRADES ", ''))%>%
@@ -20,3 +20,27 @@ parcc_tib<-parcc_tib%>%mutate(sch_code = `Org Code`,
   mutate(subject = tolower(subject))
 
 
+###################### Total students and overall PARCC Passing 
+enr<-read_excel("~/Downloads/District-Grade.xlsx",na="N/A")%>%filter(Gr.4 != '***')
+sum(enr$District_Total, na.rm=T) #total student enrollment
+
+#student enrollment grade 3-8
+enr%>%summarise(el_gr = sum(as.numeric(Gr.3), na.rm = T)+sum(as.numeric(Gr.4), na.rm = T)+
+                  sum(as.numeric(Gr.5), na.rm = T)+sum(as.numeric(Gr.6), na.rm = T)+
+                  sum(as.numeric(Gr.7), na.rm = T)+sum(as.numeric(Gr.8), na.rm = T))
+  
+#math
+district<-read_excel("~/Downloads/parcc.xls", skip = 7, na = "N/A")
+sum(district$`Stud. Incl. #`, na.rm = T)
+district%>%summarise(testers = sum(`Stud. Incl. #`, na.rm = T),
+                     l4 = sum(`L4 #`, na.rm = T),
+                     l5 = sum(`L5 #`, na.rm =T))%>%
+  mutate(passing = (l4+l5)/testers)
+
+#ela
+dis_ela<-read_excel("~/Downloads/parcc_ela.xls", skip = 7, na = "N/A")
+sum(dis_ela$`Stud. Incl. #`, na.rm = T)
+dis_ela%>%summarise(testers = sum(`Stud. Incl. #`, na.rm = T),
+                     l4 = sum(`L4 #`, na.rm = T),
+                     l5 = sum(`L5 #`, na.rm =T))%>%
+  mutate(passing = (l4+l5)/testers)
