@@ -19,7 +19,8 @@ parcc_tib<-parcc_tib%>%mutate(sch_code = `Org Code`,
   separate(`Grade/Subject`, c('grade', 'subject'), sep = " ")%>%
   mutate(subject = tolower(subject))
 
-
+#rm(parcc_tot)
+#rm(i)
 ###################### Total students and overall PARCC Passing 
 enr<-read_excel("./data/MA/District-Grade.xlsx",na="N/A")%>%filter(Gr.4 != '***')
 sum(enr$District_Total, na.rm=T) #total student enrollment
