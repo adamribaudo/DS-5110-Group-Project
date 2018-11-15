@@ -87,6 +87,9 @@ ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid))
 ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
 fit5 <- lm(data=dc, sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + high_suspensions + Any_Care)
 summary(fit5)
+
+ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid^2, color=Any_Care)) + labs(x="Provides Before or After School Care", y="Residuals") + scale_y_continuous(labels = scales::percent) + theme_light() + guides(color=FALSE)
+
 ```
 
 # Visualize Model
@@ -94,15 +97,23 @@ summary(fit5)
 dc <- dc %>% add_residuals(fit3) %>% add_predictions(fit3)
 ggplot(dc) + geom_point(aes(x=pred, y=sqrt(math_proficiency)))
 
-ggplot(dc) + geom_point(aes(x=Safe_Truancy_Current_Year, y=suspensions))
-
 grid <- dc %>% 
-  data_grid(suspensions, Safe_Truancy_Current_Year) %>% add_predictions(fit3) %>%
-  mutate(pred_binary = pred > .309)
+  data_grid(suspensions, Safe_Truancy_Current_Year) %>% add_predictions(fit3) %>% na.omit() %>% 
+  mutate(pred = pred^2) %>% mutate(pred_binary = pred > .309) 
 
-ggplot(grid) + geom_point(aes(x=suspensions, y=Safe_Truancy_Current_Year, color=pred_binary))
+ggplot(grid) + geom_point(aes(x=suspensions, y=Safe_Truancy_Current_Year, color=pred_binary)) +
+  scale_y_continuous(labels = scales::percent) + scale_x_continuous(labels = scales::percent) + 
+  labs(x="Suspension Rate", y="Truancy Rate", color="Above Avg Math", title="Predicted Inputs to Achieve Above Average Math Proficiency") + theme_light()
+  
 
-rmse(data=dc,fit3) # do I need to square this?
+ggplot(dc) + geom_point(aes(pred^2, math_proficiency))
+predict(fit3, dc)
+dc$Safe_Truancy_Current_Year[1]
+dc$suspensions[1]
+dc$pred[1]
 
+dc_rmse <- dc %>% select(math_proficiency, pred, Safe_Truancy_Current_Year, suspensions) %>% na.omit()
+Metrics::rmse(dc_rmse$math_proficiency, dc_rmse$pred^2)
+modelr::rmse(data=dc_rmse, fit3)
 
 ```

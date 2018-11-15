@@ -16,6 +16,7 @@ library(tidyverse)
 library(scales)
 library(modelr)
 library(corrplot)
+library(Metrics)
 
 scores_all_grades <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
   filter(Grade != "ALL") %>% 
@@ -229,8 +230,8 @@ dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficie
 
 dc_care <- dc %>% select(After_care, Before_care, math_proficiency, ela_proficiency) %>% mutate(Any_Care = After_care == "yes" | Before_care == "yes")
 
-ggplot(dc_care) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
-                         
+ggplot(dc_care) + geom_boxplot(aes(x=Any_Care, y=math_proficiency, color=Any_Care)) + labs(x="Provides Before or After School Care", y="Math Proficiency", title="Math Proficiency by After/Before School Care") + scale_y_continuous(labels = scales::percent) + theme_light() + guides(color=FALSE)
+
 ```
 
 # Spending
