@@ -38,6 +38,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Truancy
 ```{r}
 
+#TODO find a way to avoid transforming the response
+#fit0 <- lm(data=dc, math_proficiency ~ I(Safe_Truancy_Current_Year^2))
+
 ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = sqrt(math_proficiency)))
 
 fit1 <- lm(data=dc,sqrt(math_proficiency) ~ Safe_Truancy_Current_Year)
