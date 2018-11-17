@@ -17,12 +17,11 @@ library(scales)
 library(modelr)
 library(corrplot)
 library(Metrics)
-library(MASS)
 
-scores_all_grades <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
-  filter(Grade != "ALL") %>% 
-  filter(`School Code` != "DCPS") %>%
-  mutate(`School Code` = as.numeric(`School Code`))
+# scores_all_grades <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
+#   filter(Grade != "ALL") %>% 
+#   filter(`School Code` != "DCPS") %>%
+#   mutate(`School Code` = as.numeric(`School Code`))
 
 scores <- read_csv("../data/DC/dcps_parcc_scores_all_grades_17_18.csv", na = c("n < 10")) %>% 
   filter(Grade == "ALL") %>% #Show all grades
