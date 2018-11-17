@@ -44,7 +44,14 @@ dc_test <- dc_part$test$data
 ## Truancy
 ```{r}
 
+<<<<<<< HEAD
 ggplot(dc_train) + geom_point(aes(x = Safe_Truancy_Current_Year, y = (math_proficiency)^.5))
+=======
+#TODO find a way to avoid transforming the response
+#fit0 <- lm(data=dc, math_proficiency ~ I(Safe_Truancy_Current_Year^2))
+
+ggplot(dc) + geom_point(aes(x = Safe_Truancy_Current_Year, y = sqrt(math_proficiency)))
+>>>>>>> d3015683bbb5536b7db80bc0eb7e44d1137ce146
 
 fit1 <- lm(data=dc_train,sqrt(math_proficiency) ~ Safe_Truancy_Current_Year)
 dc_train <- dc_train %>% add_residuals(fit1)
