@@ -97,12 +97,12 @@ summary(fit4)
 ```{r}
 
 
-ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid))
-ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
-fit5 <- lm(data=dc, sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + high_suspensions + Any_Care)
-summary(fit5)
-
-ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid^2, color=Any_Care)) + labs(x="Provides Before or After School Care", y="Residuals") + scale_y_continuous(labels = scales::percent) + theme_light() + guides(color=FALSE)
+# ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid))
+# ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=math_proficiency))
+# fit5 <- lm(data=dc, sqrt(math_proficiency) ~ Safe_Truancy_Current_Year + high_suspensions + Any_Care)
+# summary(fit5)
+# 
+# ggplot(dc) + geom_boxplot(aes(x=Any_Care, y=resid^2, color=Any_Care)) + labs(x="Provides Before or After School Care", y="Residuals") + scale_y_continuous(labels = scales::percent) + theme_light() + guides(color=FALSE)
 
 ```
 
@@ -133,7 +133,7 @@ ggplot(grid) + geom_point(aes(x=suspensions, y=Safe_Truancy_Current_Year, color=
   labs(x="Suspension Rate", y="Truancy Rate", color=">31% Math", title="Predicted Inputs to Achieve Above 31% Math Proficiency") + theme_light()
   
 
-ggplot(dc) + geom_point(aes(pred^2, math_proficiency))
+#ggplot(dc) + geom_point(aes(pred^2, math_proficiency))
 predict(fit3, dc)
 dc$Safe_Truancy_Current_Year[1]
 dc$suspensions[1]
@@ -143,7 +143,7 @@ dc$pred[1]
 
 #TODO find a way to determine the per-unit change in math proficiency for my variables:
 #When looking here, I can see changing truancy by 1% changes math_proficiency by .7%
-View(grid %>% filter(Safe_Truancy_Current_Year == 0))
+#View(grid %>% filter(Safe_Truancy_Current_Year == 0))
 
 
 ```
