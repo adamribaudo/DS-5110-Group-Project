@@ -148,24 +148,3 @@ dc$pred[1]
 
 ```
 
-## Find variable impact
-```{r}
-predict(fit3, tribble(
-    ~suspensions, ~Safe_Truancy_Current_Year,
-    1,0
-))
-
-as.tibble(seq(0.01, 1, .01))
-
-grid2 <- data_grid(seq(0.01, 1, .01)) 
-
-suspension_pred <- tibble(proficiency=predict(fit3, data.frame(suspensions=seq(.00,1,.01), Safe_Truancy_Current_Year=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Suspension")
-
-truancy_pred <- tibble(proficiency=predict(fit3, data.frame(Safe_Truancy_Current_Year=seq(.00,1,.01), suspensions=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Truancy")
-
-final_pred <- suspension_pred %>% union(truancy_pred)
-
-ggplot(final_pred) + geom_line(aes(rate,proficiency, color=variable ))
-dc_model <- fit3
-save(dc_model, file=".dc_model")
-```
