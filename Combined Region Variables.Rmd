@@ -1,0 +1,27 @@
+---
+title: "Final Viz"
+author: "Adam Ribaudo"
+date: "November 20, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Combined Region Variables
+
+```{r}
+#dc_model <- fit3
+#save(dc_model, file=".dc_model")
+load(".dc_model")
+
+dc_suspension_pred <- tibble(proficiency=predict(dc_model, data.frame(suspensions=seq(.00,1,.01), Safe_Truancy_Current_Year=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Suspension")
+
+dc_truancy_pred <- tibble(proficiency=predict(dc_model, data.frame(Safe_Truancy_Current_Year=seq(.00,1,.01), suspensions=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Truancy")
+
+final_pred <- dc_suspension_pred %>% union(dc_truancy_pred)
+
+ggplot(final_pred) + geom_line(aes(rate,proficiency, color=variable ))
+
+```
