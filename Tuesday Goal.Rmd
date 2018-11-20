@@ -27,16 +27,19 @@ absentism <- read_excel(paste0(path,"data/CO/2017-2018/Chronically Absent by Dis
 
 scores <- scores %>%
   filter(District_Name != "All Districts",School_Name == "All Schools",
-         Content == "English Language Arts", Test_Grade == "All Grades",
+         Content == "Mathematics", Test_Grade == "All Grades",
          !is.na(Percent_Met_or_Exceeded_Expectations),
          !is.na(Valid_Scores))
 scores%>%
   left_join(absentism, by = 'District_Name') %>%
-  ggplot() + geom_line(aes(x = Truancy_Rate,
-                      y = as.numeric(Percent_Met_or_Exceeded_Expectations),na.rm = TRUE)) +
-    scale_y_continuous() +
+  mutate(Truancy_Percent = Truancy_Rate * 100) %>%
+  ggplot(aes(x = Truancy_Percent,
+                      y = as.numeric(Percent_Met_or_Exceeded_Expectations)),na.rm = TRUE) + geom_point() +
+  geom_smooth()+  
+  scale_y_continuous() +
     xlab("Truancy Rate") +
-    ylab("Percentage Met or Exceeded Expectations")
+    ylab("% Met or Exceeded Expectations")+
+  scale_x_continuous()
 
 ```
 
@@ -46,11 +49,12 @@ By Teacher Retention
 turnover <- read_excel(paste0(path,"data/CO/2017-2018/2017-18 Personnel Turnover Rate by District and Position Categories.xlsx"))
 
 turnover <- turnover%>%filter(Job_Classification == 'Teachers',!is.na(Turnover_Rate))%>%
-            transmute(Retention_Rate = (1-Turnover_Rate) * 100,District_Name=District_Name)
+            transmute(Retention_Rate = as.numeric(1-Turnover_Rate),District_Name=District_Name)
 
 scores%>%
   left_join(turnover, by = 'District_Name') %>%
-  ggplot(aes(x = Retention_Rate,
+  mutate(r2 = Retention_Rate * Retention_Rate * 100) %>%
+  ggplot(aes(x = r2,
                       y = as.numeric(Percent_Met_or_Exceeded_Expectations))) + geom_point() +
     geom_smooth()+
     scale_y_continuous() +
@@ -129,8 +133,17 @@ Student Teacher Ratio
 
 
 ```{r}
-stratios <- read_excel(
-paste0(path,"data/CO/2017-2018/2017-18 Student Teacher Ratios.xlsx"))
+final_data <- scores%>%
+  left_join(absentism, by = 'District_Name') %>%
+  mutate(Truancy_Percent = Truancy_Rate * 100)%>%
+  inner_join(discipline, by = "District_Name") %>%
+  mutate(DiscRatio = (Suspensions/as.numeric(Valid_Scores)) * 100)%>%
+  left_join(turnover, by = 'District_Name') %>%
+  mutate(r2 = Retention_Rate * Retention_Rate * 100)%>%
+  filter(!is.na(Percent_Met_or_Exceeded_Expectations))
+
+fitdata<-lm(as.numeric(Percent_Met_or_Exceeded_Expectations) ~ Truancy_Percent + Suspensions + r2,data = final_data)
+summary(fitdata)
 
 ```
 
