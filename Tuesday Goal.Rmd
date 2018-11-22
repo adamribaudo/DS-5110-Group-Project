@@ -46,7 +46,7 @@ By Teacher Retention
 turnover <- read_excel(paste0(path,"data/CO/2017-2018/2017-18 Personnel Turnover Rate by District and Position Categories.xlsx"))
 
 turnover <- turnover%>%filter(Job_Classification == 'Teachers',!is.na(Turnover_Rate))%>%
-            transmute(Retention_Rate = (1-Turnover_Rate) * 100,District_Name=District_Name)
+            transmute(Retention_Rate = (1-Turnover_Rate),District_Name=District_Name)
 
 scores%>%
   left_join(turnover, by = 'District_Name') %>%
@@ -79,7 +79,7 @@ discipline <- discipline %>%
               filter(!is.na(Suspensions))
 scores %>% 
   inner_join(discipline, by = "District_Name") %>%
-  mutate(DiscRatio = (Suspensions/as.numeric(Valid_Scores)) * 100)%>%
+  mutate(DiscRatio = (Suspensions/as.numeric(Valid_Scores)))%>%
   ggplot(aes(x = DiscRatio,y = as.numeric(Percent_Met_or_Exceeded_Expectations))) + 
   geom_point() +
   geom_smooth() +
@@ -129,8 +129,14 @@ Student Teacher Ratio
 
 
 ```{r}
-stratios <- read_excel(
-paste0(path,"data/CO/2017-2018/2017-18 Student Teacher Ratios.xlsx"))
+final_data<-scores%>%
+  left_join(absentism, by = 'District_Name')%>%
+  left_join(discipline, by = "District_Name")%>%
+  left_join(turnover, by = 'District_Name')
+
+fitdata<- lm(as.numeric(Percent_Met_or_Exceeded_Expectations)~Truancy_Rate+Suspensions+Retention_Rate,final_data)
+
+summary(fitdata)
 
 ```
 
