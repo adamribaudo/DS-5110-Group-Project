@@ -15,12 +15,21 @@ knitr::opts_chunk$set(echo = TRUE)
 #dc_model <- fit3
 #save(dc_model, file=".dc_model")
 load(".dc_model")
+load("ma_fit.RData")
+ma_model <- fit1
 
 dc_suspension_pred <- tibble(proficiency=predict(dc_model, data.frame(suspensions=seq(.00,1,.01), Safe_Truancy_Current_Year=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Suspension")
 
 dc_truancy_pred <- tibble(proficiency=predict(dc_model, data.frame(Safe_Truancy_Current_Year=seq(.00,1,.01), suspensions=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Truancy")
 
-final_pred <- dc_suspension_pred %>% union(dc_truancy_pred)
+#MA
+ma_retention_pred <- tibble(proficiency=predict(ma_model, data.frame(retained=seq(.00,1,.01), ooss=rep(0,101),abs_ten=rep(0,101)))- ma_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Retention")
+
+ma_truancy_pred <- tibble(proficiency=predict(ma_model, data.frame(abs_ten=seq(.00,1,.01), ooss=rep(0,101),retained=rep(0,101)))- ma_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Truancy")
+
+ma_suspension_pred <- tibble(proficiency=predict(ma_model, data.frame(ooss=seq(.00,1,.01), abs_ten=rep(0,101),retained=rep(0,101)))- ma_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Suspension")
+
+final_pred <- dc_suspension_pred %>% union(dc_truancy_pred) %>% union(ma_retention_pred) %>% union(ma_truancy_pred) %>% union(ma_suspension_pred)
 
 ggplot(final_pred) + geom_line(aes(rate,proficiency, color=variable ))
 
