@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
 ## Combined Region Variables
@@ -16,18 +17,24 @@ knitr::opts_chunk$set(echo = TRUE)
 #save(dc_model, file=".dc_model")
 load(".dc_model")
 load("ma_fit.RData")
-ma_model <- fit1
+load(".CO_model")
 
+#CO
+# co_retention_pred <- tibble(proficiency=predict(CO_model, data.frame(Retention=seq(.00,1,.01), OutofSchoolSuspensions=rep(0,101),Truancy=rep(0,101)))- CO_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="CO Retention")
+# 
+# co_suspension_pred <- tibble(proficiency=predict(CO_model, data.frame(OutofSchoolSuspensions=seq(.00,1,.01), Retention=rep(0,101),Truancy=rep(0,101)))- CO_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="CO Suspension")
+
+#DC
 dc_suspension_pred <- tibble(proficiency=predict(dc_model, data.frame(suspensions=seq(.00,1,.01), Safe_Truancy_Current_Year=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Suspension")
 
 dc_truancy_pred <- tibble(proficiency=predict(dc_model, data.frame(Safe_Truancy_Current_Year=seq(.00,1,.01), suspensions=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Truancy")
 
 #MA
-ma_retention_pred <- tibble(proficiency=predict(ma_model, data.frame(retained=seq(.00,1,.01), ooss=rep(0,101),abs_ten=rep(0,101)))- ma_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Retention")
+ma_retention_pred <- tibble(proficiency=predict(ma_fit, data.frame(retained=seq(.00,1,.01), ooss=rep(0,101),abs_ten=rep(0,101)))- ma_fit$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Retention")
 
-ma_truancy_pred <- tibble(proficiency=predict(ma_model, data.frame(abs_ten=seq(.00,1,.01), ooss=rep(0,101),retained=rep(0,101)))- ma_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Truancy")
+ma_truancy_pred <- tibble(proficiency=predict(ma_fit, data.frame(abs_ten=seq(.00,1,.01), ooss=rep(0,101),retained=rep(0,101)))- ma_fit$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Truancy")
 
-ma_suspension_pred <- tibble(proficiency=predict(ma_model, data.frame(ooss=seq(.00,1,.01), abs_ten=rep(0,101),retained=rep(0,101)))- ma_model$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Suspension")
+ma_suspension_pred <- tibble(proficiency=predict(ma_fit, data.frame(ooss=seq(.00,1,.01), abs_ten=rep(0,101),retained=rep(0,101)))- ma_fit$coefficients[1]) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="MA Suspension")
 
 final_pred <- dc_suspension_pred %>% union(dc_truancy_pred) %>% union(ma_retention_pred) %>% union(ma_truancy_pred) %>% union(ma_suspension_pred)
 
