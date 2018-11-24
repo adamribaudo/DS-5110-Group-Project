@@ -12,15 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Combined Region Variables
 
 ```{r}
-#dc_model <- fit3
-#save(dc_model, file=".dc_model")
 library(dplyr)
 library(ggplot2)
 load(".dc_model")
 load("ma_fit.RData")
 load(".CO_model")
 ma_model <- ma_fit
-#load(".MA_model")
 
 dc_suspension_pred <- tibble(proficiency=predict(dc_model, data.frame(suspensions=seq(.00,1,.01), Safe_Truancy_Current_Year=rep(0,101)))^2- 0.4447553) %>% bind_cols(data.frame(rate=seq(.00,1,.01))) %>% mutate(variable="DC Suspension")
 
@@ -44,6 +41,7 @@ CO_suspension_pred <- tibble(proficiency=predict(CO_model, data.frame(Suspension
 final_pred <- dc_suspension_pred %>% union(dc_truancy_pred) %>% union(ma_retention_pred) %>% union(ma_truancy_pred) %>% union(ma_suspension_pred) %>%union(CO_truancy_pred) %>%
   union(CO_retention_pred) %>% union(CO_suspension_pred)
 
-ggplot(final_pred) + geom_line(aes(rate,proficiency, color=variable ))
+#Limiting the y scale to -100% and 100% math proficiency
+ggplot(final_pred) + geom_line(aes(rate,proficiency, color=variable )) + scale_y_continuous(limits=c(-1,1))
 
 ```
