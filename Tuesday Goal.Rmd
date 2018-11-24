@@ -129,14 +129,12 @@ Student Teacher Ratio
 
 
 ```{r}
-final_data<-scores%>%
-  left_join(absentism, by = 'District_Name')%>%
-  left_join(discipline, by = "District_Name")%>%
-  left_join(turnover, by = 'District_Name')
-
-fitdata<- lm(as.numeric(Percent_Met_or_Exceeded_Expectations)~Truancy_Rate+Suspensions+Retention_Rate,final_data)
-
-summary(fitdata)
+final_datatrain <- final_data %>%
+                    transmute(Proficient = as.numeric(Percent_Met_or_Exceeded_Expectations)/100,
+                              SuspensionRate = Suspensions / as.numeric(Valid_Scores),
+                              TruancyRate = Truancy_Rate,
+                              RetentionRate = Retention_Rate)
+CO_model <- lm(as.numeric(Proficient)~SuspensionRate+TruancyRate+RetentionRate,final_datatrain)
 
 ```
 
