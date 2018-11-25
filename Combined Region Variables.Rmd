@@ -42,6 +42,6 @@ final_pred <- dc_suspension_pred %>% union(dc_truancy_pred) %>% union(ma_retenti
   union(CO_retention_pred) %>% union(CO_suspension_pred)
 
 #Limiting the y scale to -100% and 100% math proficiency
-ggplot(final_pred) + geom_line(aes(rate,proficiency, color=variable )) + scale_y_continuous(limits=c(-1,1))
+ggplot(final_pred) + geom_line(size=2,aes(rate,proficiency, color=variable )) + scale_y_continuous(limits=c(-1,1)) +  theme(text = element_text(size=20)) + xlab("Rate") + ylab("Math Proficiency") + labs(color="Variable")
 
 ```
