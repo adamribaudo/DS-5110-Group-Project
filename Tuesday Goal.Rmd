@@ -19,15 +19,15 @@ library(tidyr)
 1. By Truancy
 
 ```{r}
-#path = ""   ## use if relative path
-path <- "C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/"
+path = ""   ## use if relative path
+#path <- "C:/Users/Ayush/Documents/GitHub/DS-5110-Group-Project/"
 scores <- read_excel(paste0(path,"data/CO/2017-2018/2018 PARCC data.xlsx"))
 
 absentism <- read_excel(paste0(path,"data/CO/2017-2018/Chronically Absent by District 2017-18xls.xlsx"))
 
 scores <- scores %>%
   filter(District_Name != "All Districts",School_Name == "All Schools",
-         Content == "English Language Arts", Test_Grade == "All Grades",
+         Content == "Mathematics", Test_Grade == "All Grades",
          !is.na(Percent_Met_or_Exceeded_Expectations),
          !is.na(Valid_Scores))
 scores%>%
@@ -69,6 +69,9 @@ By Disciplinary Action
 ```{r}
 discipline <- read_excel(
 paste0(path,"data/CO/2017-2018/Discipline by Gender 2017-18 Corrected.xlsx"))
+enrolled <- read_excel(
+paste0(path, "data/CO/2017-2018/2017-18_PupilMembership_byDistrictCounty.xlsx"))
+
 
 discipline <- discipline %>%
               transmute(District_Name = District_Name,Suspensions =     
@@ -79,7 +82,8 @@ discipline <- discipline %>%
               filter(!is.na(Suspensions))
 scores %>% 
   inner_join(discipline, by = "District_Name") %>%
-  mutate(DiscRatio = (Suspensions/as.numeric(Valid_Scores)))%>%
+  left_join(enrolled, by = "District_Name") %>%
+  mutate(DiscRatio = (Suspensions/Pupil_Enrolled))%>%
   ggplot(aes(x = DiscRatio,y = as.numeric(Percent_Met_or_Exceeded_Expectations))) + 
   geom_point() +
   geom_smooth() +
@@ -129,12 +133,22 @@ Student Teacher Ratio
 
 
 ```{r}
+final_data<-scores %>%
+  left_join(absentism, by = 'District_Name') %>%
+  left_join(discipline, by = "District_Name") %>%
+  left_join(turnover, by = 'District_Name') %>%
+  left_join(enrolled, by = 'District_Name')
+
+fitdata<- lm(as.numeric(Percent_Met_or_Exceeded_Expectations)~Truancy_Rate+Suspensions+Retention_Rate,final_data)
+
+summary(fitdata)
+
 final_datatrain <- final_data %>%
                     transmute(Proficient = as.numeric(Percent_Met_or_Exceeded_Expectations)/100,
-                              SuspensionRate = Suspensions / as.numeric(Valid_Scores),
+                              SuspensionRate = Suspensions / as.numeric(Pupil_Enrolled),
                               TruancyRate = Truancy_Rate,
                               RetentionRate = Retention_Rate)
 CO_model <- lm(as.numeric(Proficient)~SuspensionRate+TruancyRate+RetentionRate,final_datatrain)
-
+summary(CO_model)
 ```
 
